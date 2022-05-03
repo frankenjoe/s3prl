@@ -27,6 +27,7 @@ class DistillerConfig:
             )
         )
         self.extractor_dropout = float(config.get("extractor_dropout", 0.0))
+        self.extractor_conv_bias = bool(config.get("extractor_conv_bias", False))
         self.feature_grad_mult = float(config.get("feature_grad_mult", 1.0))
 
         # Convolutional relative positional encoding
@@ -92,7 +93,7 @@ class DistillerModel(nn.Module):
             self.conv_layers,
             dropout=config.extractor_dropout,
             mode=config.extractor_mode,
-            conv_bias=False,
+            conv_bias=config.extractor_conv_bias,
         )
         self.feature_grad_mult = config.feature_grad_mult
 

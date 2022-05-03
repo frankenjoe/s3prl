@@ -185,7 +185,10 @@ class DistillerForPretrain(nn.Module):
         self.distiller = DistillerModel(config)
 
         self.teacher_config = teacher_config
-        teacher = torch.hub.load("s3prl/s3prl", teacher_config.model)
+        if 'ckpt' in teacher_config:
+            teacher = torch.hub.load("s3prl/s3prl", teacher_config.model, teacher_config.ckpt)
+        else:
+            teacher = torch.hub.load("s3prl/s3prl", teacher_config.model)
         if (
             teacher_config.model.find("hubert") >= 0
             or teacher_config.model.find("wav2vec2") >= 0
@@ -275,6 +278,12 @@ class DistillerForPretrain(nn.Module):
                     ]
                 else:
                     teacher_hiddens = teacher_hiddens["hidden_states"][1:]
+
+                # for some reason it can happen that hidden states
+                # have a different number of time steps
+                t_dim_min = min([t.shape[1] for t in teacher_hiddens])
+                teacher_hiddens = [t[:, :t_dim_min, :] for t in teacher_hiddens]
+
                 teacher_hiddens = torch.stack(teacher_hiddens, dim=1)  # B x N x T x D
 
         # Compute all objectives
